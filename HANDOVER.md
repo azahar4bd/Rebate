@@ -40,7 +40,7 @@ public/                         manifest, icons, service worker
 
 Runtime-এ শুধু `DATABASE_URL`, `ADMIN_PASSWORD`, `AUTH_SECRET` প্রয়োজন। Vercel/Neon API management tokens অ্যাপের প্রয়োজন নেই। বাস্তব credentials কেবল `.env.local`/`.env` বা Vercel environment variables-এ রাখুন; Git/chat-এ নয়। বিস্তারিত [README.md](README.md)।
 
-Database build-এর সময় initialize হয় না। Missing runtime database হলে health endpoint generic 503 ফেরত দেয়; request-time error production connection string প্রকাশ করে না। Tables তৈরি করতে `DATABASE_URL` shell-এ export করে বা `.env`-এ রেখে `npm run db:push` চালান, proposed changes পর্যালোচনা করুন এবং production backup রাখুন। `.env.local` Drizzle CLI নিজে লোড করে না।
+Database build-এর সময় initialize হয় না। Missing runtime database হলে health endpoint generic 503 ফেরত দেয় এবং Vercel-এ public Git commit SHA থাকলে revision metadata দেখায়; request-time error production connection string প্রকাশ করে না। Tables তৈরি করতে `DATABASE_URL` shell-এ export করে বা `.env`-এ রেখে `npm run db:push` চালান, proposed changes পর্যালোচনা করুন এবং production backup রাখুন। `.env.local` Drizzle CLI নিজে লোড করে না।
 
 - `rebate_rates`: unique `(product, duration, kisti)`, numeric rate, timestamps
 - `site_content`: unique text key/value, timestamp
@@ -80,4 +80,4 @@ npm run build
 
 GitHub Actions PR ও main-এ একই checks চালায়। Tests কোনো real production database ব্যবহার করে না। DB connectivity/CRUD live-check environment-specific; health ও calculator দিয়ে যাচাই করুন।
 
-**Vercel:** সঠিক project-এর **Domains**-এ `rebate-bkf.vercel.app` থাকা নিশ্চিত করুন, তারপর **Settings → Git → azahar4bd/Rebate**, production branch `main`, repo root, Next.js, Node 22.x। আগের ZIP-এর project name ছিল `rebate-calculator`; GitHub-এর আলাদা `rebate` deployment-এর সঙ্গে গুলিয়ে ফেলবেন না। Config file GitHub App/account settings পরিবর্তন করে না। তিনটি runtime variables dashboard-এ রাখুন, সর্বশেষ main source deploy করুন।
+**Vercel:** সঠিক project-এর **Domains**-এ `rebate-bkf.vercel.app` থাকা নিশ্চিত করুন, তারপর **Settings → Git → azahar4bd/Rebate**, production branch `main`, repo root, Next.js, Node 22.x। আগের ZIP-এর project name ছিল `rebate-calculator`, বর্তমান Vercel integration-এ `rebate`; bot metadata-র project ID পুরোনো ID-এর সঙ্গে মিলে গেছে। বিদ্যমান Git connection দিয়ে নতুন preview deploy ও database health check সফল হয়েছে। Config file GitHub App/account settings পরিবর্তন করে না। তিনটি runtime variables dashboard-এ রাখুন, সর্বশেষ main source deploy করুন।

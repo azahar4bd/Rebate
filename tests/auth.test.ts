@@ -15,13 +15,14 @@ import { PATCH as renameDuration, DELETE as deleteDuration } from "../src/app/ap
 import { GET as health } from "../src/app/api/health/route";
 import { getDb } from "../src/db";
 
-const envKeys = ["ADMIN_PASSWORD", "AUTH_SECRET", "DATABASE_URL", "NODE_ENV"] as const;
+const envKeys = ["ADMIN_PASSWORD", "AUTH_SECRET", "DATABASE_URL", "NODE_ENV", "VERCEL_GIT_COMMIT_SHA"] as const;
 const originalEnv = new Map(envKeys.map((key) => [key, process.env[key]]));
 
 beforeEach(() => {
   process.env.ADMIN_PASSWORD = "isolated-test-password";
   process.env.AUTH_SECRET = randomBytes(32).toString("hex");
   delete process.env.DATABASE_URL;
+  delete process.env.VERCEL_GIT_COMMIT_SHA;
 });
 afterEach(() => {
   for (const [key, value] of originalEnv) {
@@ -145,4 +146,12 @@ test("DB imports are build-safe and missing runtime configuration is explicit", 
   const response = await health();
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { ok: false, error: "Database is not configured." });
+});
+
+test("health exposes only the public deployment SHA for revision verification", async () => {
+  process.env.VERCEL_GIT_COMMIT_SHA = "a".repeat(40);
+  const response = await health();
+  assert.deepEqual(await response.json(), {
+    ok: false, error: "Database is not configured.", commit: "a".repeat(40),
+  });
 });

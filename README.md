@@ -64,15 +64,15 @@ npm start
 
 ## আপনার বিদ্যমান Vercel অ্যাপকে GitHub-এর সঙ্গে যুক্ত করা
 
-**নতুন project তৈরি না করে** `rebate-bkf.vercel.app` domain যে project-এ আছে, সেটি খুলুন। ZIP-এর পুরোনো নথিতে নাম ছিল `rebate-calculator`; dashboard-এ **Domains** দেখে নিশ্চিত হোন। অন্য `rebate` project-এ integration থাকা এই domain-এর সংযোগের প্রমাণ নয়।
+**নতুন project তৈরি করার প্রয়োজন নেই।** বিদ্যমান GitHub/Vercel integration-এর project name `rebate`; ZIP-এর পুরোনো নথিতে নাম ছিল `rebate-calculator`। Vercel bot-এর ফেরত দেওয়া project ID পুরোনো নথির ID-এর সঙ্গে মিলেছে, এবং নতুন preview-এর database health check সফল হয়েছে। একই project-এর বিদ্যমান Git সংযোগ দিয়েই deployment হচ্ছে। সংযোগ যাচাই বা পুনরায় সেট করার দরকার হলে `rebate-bkf.vercel.app`-এর project খুলুন ও **Domains** পরীক্ষা করুন।
 
 1. Vercel Dashboard → সঠিক project → **Settings → Git**।
 2. **Connect Git Repository** → GitHub-এর **`azahar4bd/Rebate`** নির্বাচন করুন। Repository না দেখা গেলে Vercel GitHub App-কে এই repo-র access দিন।
 3. Production Branch: **`main`**। Root Directory: repository root (`./`; dashboard-এ ফাঁকা root-ও ঠিক)।
 4. Framework: **Next.js**; Node.js: **22.x**; Install: **`npm ci`**; Build: **`npm run build`**; Output Directory: Next.js-এর default, override নয়। `vercel.json` framework/install/build settings রাখে, কিন্তু নিজে account বা Git connection তৈরি করে না।
 5. **Settings → Environment Variables**-এ উপরের তিনটি variable দিন। Production-এ রাখুন; Preview deploy প্রয়োজন হলে Preview-তেও দিন। Preview-তে production-এর পরিবর্তে আলাদা test database/password ব্যবহার করুন।
-6. **Deployments → Redeploy** করে সর্বশেষ `main` source ব্যবহার করুন (পুরোনো deployment-এর source নয়)। এরপর `main`-এ merge হলেই স্বয়ংক্রিয় production deploy হবে।
-7. deployment **Ready** হলে https://rebate-bkf.vercel.app এবং `/api/health` পরীক্ষা করুন। Health JSON `{ "ok": true }` database connectivity বোঝায়; calculator-এ রেট আসা schema/data setup-ও নিশ্চিত করে।
+6. Git সংযোগ থাকলে `main`-এ merge হলেই স্বয়ংক্রিয় production deploy হবে। Environment variables পরিবর্তনের পরে সর্বশেষ `main` production deployment থেকে **Redeploy** করুন; পুরোনো deployment-এর পুরোনো source নয়।
+7. deployment **Ready** হলে https://rebate-bkf.vercel.app এবং `/api/health` পরীক্ষা করুন। Health JSON-এর `ok: true` database connectivity বোঝায়। Vercel system variable পাওয়া গেলে `commit` field-এ deployed Git SHA-ও থাকে; calculator-এ রেট আসা schema/data setup-ও নিশ্চিত করে।
 
 Vercel Git integration ও environment variables account-level settings; শুধু source push/merge দিয়ে সেগুলো বদলানো যায় না। বিদ্যমান domain বা database পরিবর্তন করার প্রয়োজন নেই।
 
