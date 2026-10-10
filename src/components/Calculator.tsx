@@ -17,6 +17,8 @@ import {
   RotateCcw,
   ShieldCheck,
   Sigma,
+  User,
+  Users,
 } from "lucide-react";
 import { PRODUCTS, sortDurations, type Product } from "@/data/rebateData";
 import {
@@ -32,6 +34,8 @@ import LoginModal from "./LoginModal";
 import ContentEditor from "./ContentEditor";
 import Marquee from "./Marquee";
 import OfflineIndicator from "./OfflineIndicator";
+import VisitorGate from "./VisitorGate";
+import VisitorReport from "./VisitorReport";
 
 interface CalculatorProps {
   initialRates: RateRow[];
@@ -87,6 +91,9 @@ export default function Calculator({
   const [loginOpen, setLoginOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [visitorName, setVisitorName] = useState<string | null>(null);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,12 +150,26 @@ export default function Calculator({
       });
   }, []);
 
-  // Check admin session on mount
+  // Check admin session on mount; non-admin visitors without a stored name
+  // pass through the one-time name gate before using the calculator.
   useEffect(() => {
+    const resolveVisitor = (admin: boolean) => {
+      if (admin) return;
+      let saved: string | null = null;
+      try {
+        saved = localStorage.getItem("rebate_visitor_name");
+      } catch {}
+      if (saved) setVisitorName(saved);
+      else setGateOpen(true);
+    };
     fetch("/api/auth/session")
       .then((res) => res.json())
-      .then((data) => setIsAdmin(Boolean(data.isAdmin)))
-      .catch(() => setIsAdmin(false));
+      .then((data) => {
+        const admin = Boolean(data.isAdmin);
+        setIsAdmin(admin);
+        resolveVisitor(admin);
+      })
+      .catch(() => resolveVisitor(false));
   }, []);
 
   const notify = useCallback((message: string) => {
@@ -204,6 +225,27 @@ export default function Calculator({
         : null,
     [selectedRate, disburseNum]
   );
+
+  // Record a calculation event once the result has settled (debounced so a
+  // typing burst does not fan out requests). Best-effort: offline-safe.
+  useEffect(() => {
+    if (!visitorName || rebate === null || !product || !duration || !kisti) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetch("/api/visitors/calculation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: visitorName,
+          product,
+          duration,
+          kisti: Number(kisti),
+        }),
+      }).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [visitorName, rebate, product, duration, kisti]);
 
   /* ------------------------------- Handlers -------------------------------- */
 
@@ -294,6 +336,17 @@ export default function Calculator({
               <span className="hidden sm:inline">Content</span>
             </button>
           )}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-500 hover:bg-emerald-100 active:scale-[0.98]"
+              title="Visitor report"
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Visitors</span>
+            </button>
+          )}
           {isAdmin ? (
             <button
               type="button"
@@ -357,6 +410,12 @@ export default function Calculator({
               </button>
             ))}
           </div>
+          {!isAdmin && visitorName && (
+            <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <User className="h-3.5 w-3.5" />
+              স্বাগতম, {visitorName}
+            </p>
+          )}
         </section>
 
         {/* ------------------- Two-column: form+result | chart ------------------- */}
@@ -631,6 +690,23 @@ export default function Calculator({
         content={content}
         onClose={() => setEditorOpen(false)}
         onSaved={(newContent) => setContent(newContent)}
+        notify={notify}
+      />
+
+      {/* --------------------------- Visitor gate ------------------------------- */}
+      <VisitorGate
+        open={gateOpen}
+        onEntered={(name) => {
+          setVisitorName(name);
+          setGateOpen(false);
+        }}
+        notify={notify}
+      />
+
+      {/* ------------------------- Visitor report ------------------------------ */}
+      <VisitorReport
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
         notify={notify}
       />
 

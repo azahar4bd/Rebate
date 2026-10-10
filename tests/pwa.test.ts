@@ -41,7 +41,7 @@ function serviceWorker(fetchImpl: typeof fetch, cachedResponse?: Response) {
 
 test("service worker never intercepts or caches auth, health or writes", () => {
   const worker = serviceWorker(async () => { throw new Error("must not fetch"); });
-  for (const path of ["/api/auth/session", "/api/auth/login", "/api/auth/logout", "/api/health", "/api/durations"]) {
+  for (const path of ["/api/auth/session", "/api/auth/login", "/api/auth/logout", "/api/health", "/api/durations", "/api/visitors", "/api/visitors/checkin", "/api/visitors/calculation"]) {
     assert.equal(worker.request(path), undefined);
   }
   assert.equal(worker.request("/api/rates", "POST"), undefined);

@@ -22,16 +22,20 @@ src/app/api/rates/               public read, admin create/update/delete/restore
 src/app/api/durations/           public list, admin rename/delete
 src/app/api/content/             public read, admin text updates
 src/app/api/health/              runtime database connectivity (200 or 503)
+src/app/api/visitors/            public checkin/calculation, admin list/delete
 src/components/Calculator.tsx   calculator and management UI
 src/components/RateDatabaseModal.tsx
 src/components/DurationManager.tsx
 src/components/ContentEditor.tsx
+src/components/VisitorGate.tsx   one-time visitor name gate
 src/components/OfflineIndicator.tsx
+src/components/VisitorReport.tsx  admin visitor report modal
 src/db/index.ts                 lazy getDb(), bounded pg pool, Neon URL normalization
-src/db/schema.ts                rebate_rates, site_content
+src/db/schema.ts                rebate_rates, site_content, visitors
 src/data/rebateData.ts          canonical 299 rates and sorting helpers
 src/data/defaultContent.ts      fallback site text
 src/lib/rate.ts                 serialization, formatting, calculation
+src/lib/visitor.ts              name normalization, record serialization
 src/lib/auth.ts                 signed admin cookie, strict expiry, no default secrets
 public/                         manifest, icons, service worker
 ```
@@ -44,6 +48,7 @@ Database build-এর সময় initialize হয় না। Missing runtime data
 
 - `rebate_rates`: unique `(product, duration, kisti)`, numeric rate, timestamps
 - `site_content`: unique text key/value, timestamp
+- `visitors`: unique normalized name (trim + whitespace collapse, case-sensitive, 100 char max); visit_count/calc_count aggregations, last product/duration/kisti, created/last-seen timestamps
 - খালি rate table-এ প্রথম page load default rates seed করে; data থাকলে seed করে না।
 - `Restore Defaults` বর্তমান rates মুছে দেয়—এটি intentional destructive admin action।
 - Neon-এর `channel_binding` parameter pg driver-এর জন্য সরানো হয়; Neon TLS verification থাকে।
@@ -61,6 +66,11 @@ Configured password ও signing secret ছাড়া login **503**, writes **401*
 - Duration admin-managed; product validation fixed list-এর বিরুদ্ধে হয়।
 - Deleted kisti আর selected/calculated থাকে না; selection derived from current rates।
 - Modal contents open থাকা অবস্থায় mount হয়; reopen-এ transient state reset হয়।
+
+- Visitor name gate: non-admin visitors pass a one-time name modal before using the calculator; name stored in localStorage (`rebate_visitor_name`), check-in POST is best-effort (offline-safe, 503-tolerant).
+- Calculation events POST debounced (1.5s settle) with product/duration/kisti; disburse amounts are never stored.
+- Admin **Visitors** modal: totals + per-visitor table (most recently seen first), two-step delete per record.
+- New `visitors` table requires `npm run db:push` on the production database; until then check-in degrades to 503 and the calculator is unaffected.
 
 ## PWA
 
