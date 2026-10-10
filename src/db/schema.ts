@@ -50,3 +50,28 @@ export const siteContent = pgTable("site_content", {
 
 export type SiteContentRow = typeof siteContent.$inferSelect;
 export type NewSiteContentRow = typeof siteContent.$inferInsert;
+
+/**
+ * Visitor records collected by the public name gate.
+ * One row per normalized visitor name; aggregates visits and completed
+ * calculations so the admin can review who is using the calculator.
+ */
+export const visitors = pgTable(
+  "visitors",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
+    visitCount: integer("visit_count").notNull().default(1),
+    calcCount: integer("calc_count").notNull().default(0),
+    lastProduct: varchar("last_product", { length: 50 }),
+    lastDuration: varchar("last_duration", { length: 50 }),
+    lastKisti: integer("last_kisti"),
+  },
+  (table) => ({
+    nameIdx: uniqueIndex("visitors_name_idx").on(table.name),
+  })
+);
+
+export type VisitorRow = typeof visitors.$inferSelect;

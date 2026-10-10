@@ -1,11 +1,14 @@
 # Rebate Calculator
 
-PKSF মাইক্রোফাইন্যান্সের অগ্রিম কিস্তি রিবাট ক্যালকুলেটর। Jagoron, Agrossor, Buniyed, Sufolon এবং MFCE প্রোডাক্টের জন্য ২৯৯টি ডিফল্ট রেট, অ্যাডমিন রেট/Duration/টেক্সট ব্যবস্থাপনা এবং অফলাইন PWA সুবিধা রয়েছে।
+PKSF মাইক্রোফাইন্যান্সের অগ্রিম কিস্তি রিবাট ক্যালকুলেটর। Jagoron, Agrossor, Buniyed, Sufolon এবং MFCE প্রোডাক্টের জন্য ২৯৯টি ডিফল্ট রেট, অ্যাডমিন রেট/Duration/টেক্সট ব্যবস্থাপনা, ভিজিটর নাম গেট ও অ্যাডমিন ভিজিটর রিপোর্ট, এবং অফলাইন PWA সুবিধা রয়েছে।
 
 - **GitHub:** https://github.com/azahar4bd/Rebate
 - **বিদ্যমান লাইভ ঠিকানা:** https://rebate-bkf.vercel.app
 - **স্ট্যাক:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, Drizzle ORM, PostgreSQL/Neon
 - **Source:** Google Drive-এর `Rebate` ফোল্ডারের নির্বাচিত `rebate.zip`; GitHub/Vercel build ও নিরাপত্তার প্রয়োজনীয় সংশোধনসহ।
+
+- **ভিজিটর নাম গেট:** অ্যাডমিন লগইন ছাড়া প্রথম ব্যবহারে ভিজিটরকে নাম লিখতে হয়; নাম localStorage-এ থাকায় পরবর্তী বিজিটে আবার বলা হয় না।
+- **ভিজিটর রিপোর্ট:** অ্যাডমিন **Visitors** panel-এ কারা কতবার এসেছে, কতবার হিসাব করেছে এবং শেষ কোন প্রোডাক্ট/মেয়াদ/কিস্তি ব্যবহার করেছে তা দেখা যায়; চাইলে রেকর্ড মুছেও ফেলা যায়।
 
 ## লোকাল সেটআপ
 
@@ -48,7 +51,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 npm run db:push
 ```
 
-স্কিমার টেবিল: `rebate_rates` এবং `site_content`। টেবিল তৈরি হওয়ার পর প্রথম page request-এ খালি rate table-এ ২৯৯টি default row seed হয়। বিদ্যমান data মুছতে বা overwrite করতে হয় না। `Restore Defaults` আলাদা destructive admin action; কেবল প্রয়োজন হলে ব্যবহার করুন।
+স্কিমার টেবিল: `rebate_rates`, `site_content` এবং `visitors`। টেবিল তৈরি হওয়ার পর প্রথম page request-এ খালি rate table-এ ২৯৯টি default row seed হয়। বিদ্যমান data মুছতে বা overwrite করতে হয় না। `Restore Defaults` আলাদা destructive admin action; কেবল প্রয়োজন হলে ব্যবহার করুন। `visitors` টেবিল না থাকলে (আগের code-এ deploy করা database) ভিজিটর check-in gracefully 503 দেয় — calculator অস্বাভাবিক হয় না; report-এ data আসবে `db:push` চালানোর পর থেকে।
 
 ## পরীক্ষা ও production build
 
@@ -81,6 +84,7 @@ Vercel Git integration ও environment variables account-level settings; শু�
 - **টেক্সট পরিবর্তন:** admin login → **Content** → edit → **Save Changes**।
 - **রেট যোগ/এডিট/ডিলিট:** **Rate Database**; write operations শুধু admin-এর জন্য।
 - **Duration rename/delete:** **Rate Database → Durations**। Delete সেই duration-এর রেটও সরায়।
+- **ভিজিটর রিপোর্ট:** admin login → **Visitors**। Refresh দিয়ে তাজা data; Trash আইকনে দু-ধাপ confirm-এ রেকর্ড delete।
 - **Default rates restore:** admin → **Restore Defaults**; আগে backup রাখুন।
 - **অফলাইন:** আগে online অবস্থায় অ্যাপ খুলতে হবে, যাতে public data/assets cache হয়। Admin session কখনো service-worker cache-এ রাখা হয় না।
 
