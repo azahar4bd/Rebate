@@ -51,7 +51,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 npm run db:push
 ```
 
-স্কিমার টেবিল: `rebate_rates`, `site_content` এবং `visitors`। টেবিল তৈরি হওয়ার পর প্রথম page request-এ খালি rate table-এ ২৯৯টি default row seed হয়। বিদ্যমান data মুছতে বা overwrite করতে হয় না। `Restore Defaults` আলাদা destructive admin action; কেবল প্রয়োজন হলে ব্যবহার করুন। `visitors` টেবিল না থাকলে (আগের code-এ deploy করা database) ভিজিটর check-in gracefully 503 দেয় — calculator অস্বাভাবিক হয় না; report-এ data আসবে `db:push` চালানোর পর থেকে।
+স্কিমার টেবিল: `rebate_rates`, `site_content` এবং `visitors`। টেবিল তৈরি হওয়ার পর প্রথম page request-এ খালি rate table-এ ২৯৯টি default row seed হয়। বিদ্যমান data মুছতে বা overwrite করতে হয় না। `Restore Defaults` আলাদা destructive admin action; কেবল প্রয়োজন হলে ব্যবহার করুন। `visitors` টেবিল app নিজেই প্রথম ব্যবহারে auto-create করে (idempotent runtime bootstrap); চাইলে `db:push`-ও চালানো যায়।
 
 ## পরীক্ষা ও production build
 

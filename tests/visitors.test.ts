@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { afterEach, beforeEach, test } from "node:test";
+import { getTableColumns } from "drizzle-orm";
+import { visitors } from "../src/db/schema";
+import {
+  ensureVisitorsTable,
+  VISITORS_BOOTSTRAP_SQL,
+} from "../src/db/bootstrap";
 import {
   normalizeVisitorName,
   serializeVisitor,
@@ -49,6 +55,34 @@ function adminRequest(url: string, method = "GET") {
 }
 
 const deleteContext = { params: Promise.resolve({ id: "1" }) };
+
+/* -------------------------------- Bootstrap -------------------------------- */
+
+test("ensureVisitorsTable executes the bootstrap DDL exactly once per process", async () => {
+  let calls = 0;
+  const lastSql: unknown[] = [];
+  const fakeDb = {
+    execute: async (sql: unknown) => {
+      calls += 1;
+      lastSql.push(sql);
+    },
+  };
+  await ensureVisitorsTable(fakeDb as never);
+  await ensureVisitorsTable(fakeDb as never);
+  assert.equal(calls, 1);
+  assert.equal(lastSql[0], VISITORS_BOOTSTRAP_SQL);
+});
+
+test("bootstrap DDL stays in sync with the Drizzle visitors schema", () => {
+  assert.match(VISITORS_BOOTSTRAP_SQL, /CREATE TABLE IF NOT EXISTS visitors \(/);
+  assert.match(VISITORS_BOOTSTRAP_SQL, /CREATE UNIQUE INDEX IF NOT EXISTS visitors_name_idx ON visitors \(name\)/);
+  for (const column of Object.values(getTableColumns(visitors))) {
+    assert.ok(
+      VISITORS_BOOTSTRAP_SQL.includes(`${column.name} `),
+      `bootstrap DDL is missing column: ${column.name}`
+    );
+  }
+});
 
 /* ------------------------------ Name helpers ------------------------------- */
 

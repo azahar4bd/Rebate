@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
+import { ensureVisitorsTable } from "@/db/bootstrap";
 import { visitors } from "@/db/schema";
 import { isValidProduct } from "@/data/rebateData";
 import { normalizeVisitorName } from "@/lib/visitor";
@@ -54,7 +55,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    await getDb()
+    const db = getDb();
+    await ensureVisitorsTable(db);
+    await db
       .insert(visitors)
       .values({ name })
       .onConflictDoUpdate({

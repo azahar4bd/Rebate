@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
+import { ensureVisitorsTable } from "@/db/bootstrap";
 import { visitors } from "@/db/schema";
 import { isAdmin, unauthorized } from "@/lib/auth";
 
@@ -19,7 +20,9 @@ export async function DELETE(request: Request, context: RouteContext) {
   }
 
   try {
-    const deleted = await getDb()
+    const db = getDb();
+    await ensureVisitorsTable(db);
+    const deleted = await db
       .delete(visitors)
       .where(eq(visitors.id, id))
       .returning({ id: visitors.id });
