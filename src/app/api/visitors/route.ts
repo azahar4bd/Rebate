@@ -1,6 +1,7 @@
 import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
+import { ensureVisitorsTable } from "@/db/bootstrap";
 import { visitors } from "@/db/schema";
 import { isAdmin, unauthorized } from "@/lib/auth";
 import { serializeVisitor } from "@/lib/visitor";
@@ -15,7 +16,9 @@ export async function GET(request: Request) {
   if (!isAdmin(request)) return unauthorized();
 
   try {
-    const rows = await getDb()
+    const db = getDb();
+    await ensureVisitorsTable(db);
+    const rows = await db
       .select()
       .from(visitors)
       .orderBy(desc(visitors.lastSeenAt), desc(visitors.id));

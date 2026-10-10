@@ -32,6 +32,7 @@ src/components/OfflineIndicator.tsx
 src/components/VisitorReport.tsx  admin visitor report modal
 src/db/index.ts                 lazy getDb(), bounded pg pool, Neon URL normalization
 src/db/schema.ts                rebate_rates, site_content, visitors
+src/db/bootstrap.ts            idempotent runtime bootstrap (auto-creates new tables)
 src/data/rebateData.ts          canonical 299 rates and sorting helpers
 src/data/defaultContent.ts      fallback site text
 src/lib/rate.ts                 serialization, formatting, calculation
@@ -70,7 +71,7 @@ Configured password ও signing secret ছাড়া login **503**, writes **401*
 - Visitor name gate: non-admin visitors pass a one-time name modal before using the calculator; name stored in localStorage (`rebate_visitor_name`), check-in POST is best-effort (offline-safe, 503-tolerant).
 - Calculation events POST debounced (1.5s settle) with product/duration/kisti; disburse amounts are never stored.
 - Admin **Visitors** modal: totals + per-visitor table (most recently seen first), two-step delete per record.
-- New `visitors` table requires `npm run db:push` on the production database; until then check-in degrades to 503 and the calculator is unaffected.
+- `visitors` table auto-creates on first use via `src/db/bootstrap.ts` (idempotent `CREATE ... IF NOT EXISTS`); `npm run db:push` still works for manual schema management. Bootstrap DDL is kept in sync with the Drizzle schema by tests.
 
 ## PWA
 
